@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS - Advanced AI System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --jarvis-blue: #00d2ff;
+            --jarvis-glow: rgba(0, 210, 255, 0.5);
+        }
+
+        body {
+            background-color: #050a10;
+            color: var(--jarvis-blue);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .arc-reactor {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 4px solid var(--jarvis-blue);
+            box-shadow: 0 0 20px var(--jarvis-glow), inset 0 0 20px var(--jarvis-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .arc-reactor.listening {
+            animation: pulse 1.5s infinite;
+            border-color: #ff3e3e;
+            box-shadow: 0 0 30px rgba(255, 62, 62, 0.7);
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .rotating-ring {
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            border: 2px dashed var(--jarvis-blue);
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: var(--jarvis-blue);
+            opacity: 0.1;
+            position: absolute;
+            top: 0;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            from {
+                top: 0;
+            }
+
+            to {
+                top: 100%;
+            }
+        }
+
+        #terminal {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--jarvis-blue);
+            height: 200px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--jarvis-blue);
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="scanline"></div>
+
+    <!-- Header Stats -->
+    <div class="fixed top-5 left-5 text-xs font-mono uppercase tracking-widest opacity-70">
+        <div>System: Online</div>
+        <div>Core: Active</div>
+        <div>Network: Encrypted</div>
+    </div>
+
+    <div class="fixed top-5 right-5 text-xs font-mono uppercase tracking-widest text-right opacity-70">
+        <div id="clock">00:00:00</div>
+        <div>Location: Global Server</div>
+    </div>
+
+    <!-- JARVIS UI -->
+    <div class="flex flex-col items-center space-y-12">
+        <div class="relative flex items-center justify-center">
+            <div class="rotating-ring"></div>
+            <div id="main-btn" class="arc-reactor">
+                <i class="fas fa-microphone text-4xl" id="mic-icon"></i>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <h1 class="text-3xl font-bold tracking-tighter mb-2" id="status-text">JARVIS INITIALIZED</h1>
+            <p class="text-sm opacity-60 font-mono italic" id="sub-status">Awaiting Voice Command...</p>
+        </div>
+
+        <!-- Output Terminal -->
+        <div id="terminal" class="w-full max-w-2xl rounded p-4 font-mono text-sm">
+            <div class="text-blue-300">[SYSTEM] Authentication successful.</div>
+            <div class="text-blue-300">[JARVIS] Good day, Sir. I am ready to assist.</div>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <script>
+        const mainBtn = document.getElementById('main-btn');
+        const micIcon = document.getElementById('mic-icon');
+        const statusText = document.getElementById('status-text');
+        const subStatus = document.getElementById('sub-status');
+        const logs = document.getElementById('logs');
+        const terminal = document.getElementById('terminal');
+
+        // Clock Update
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        function addLog(msg, color = 'text-blue-300') {
+            const div = document.createElement('div');
+            div.className = color;
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logs.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Voice Synthesis
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.1;
+            utterance.pitch = 0.9;
+            window.speechSynthesis.speak(utterance);
+            addLog(`JARVIS: ${text}`, 'text-green-400');
+        }
+
+        // Voice Recognition Setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Your browser does not support Speech Recognition. Please use Chrome.");
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'en-US';
+
+        mainBtn.addEventListener('click', () => {
+            try {
+                recognition.start();
+            } catch (e) {
+                console.log("Recognition already started");
+            }
+        });
+
+        recognition.onstart = () => {
+            mainBtn.classList.add('listening');
+            statusText.innerText = "LISTENING...";
+            micIcon.className = "fas fa-wave-square text-4xl";
+            addLog("System listening...");
+        };
+
+        recognition.onend = () => {
+            mainBtn.classList.remove('listening');
+            statusText.innerText = "JARVIS ONLINE";
+            micIcon.className = "fas fa-microphone text-4xl";
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            subStatus.innerText = `"${transcript}"`;
+            addLog(`USER: ${transcript}`, 'text-white');
+            processCommand(transcript);
+        };
+
+        const APP_LINKS = {
+            'whatsapp': 'https://web.whatsapp.com/',
+            'youtube': 'https://www.youtube.com/',
+            'google': 'https://www.google.com/',
+            'facebook': 'https://www.facebook.com/',
+            'instagram': 'https://www.instagram.com/',
+            'twitter': 'https://www.twitter.com/',
+            'gmail': 'https://mail.google.com/',
+            'maps': 'https://maps.google.com/',
+            'github': 'https://github.com/',
+            'amazon': 'https://www.amazon.in/',
+            'chatgpt': 'https://chat.openai.com/',
+            'canva': 'https://www.canva.com/',
+            'spotify': 'https://open.spotify.com/',
+            'pubg': 'https://www.pubg.com/',
+            'roblox': 'https://www.roblox.com/',
+            'minecraft': 'https://www.minecraft.net/',
+            'chess': 'https://www.chess.com/',
+            'free fire': 'https://ff.garena.com/'
+        };
+
+        async function processCommand(cmd) {
+            // Priority 1: Generic Link Opener (Anything like "open google.com")
+            if (cmd.includes('open') || cmd.includes('kholo') || cmd.includes('chalao')) {
+                let parts = cmd.split(' ');
+                let target = parts[parts.length - 1].replace('kholo', '').replace('chalao', '').trim();
+
+                // Check in our predefined APP_LINKS
+                for (let key in APP_LINKS) {
+                    if (cmd.includes(key)) {
+                        speak(`Ji Sir, ${key} khul raha hai.`);
+                        window.open(APP_LINKS[key], '_blank');
+                        return;
+                    }
+                }
+
+                // If it looks like a URL (e.g., "open x.com")
+                if (target.includes('.') || target.includes('com') || target.includes('net') || target.includes('org')) {
+                    let url = target.startsWith('http') ? target : `https://${target}`;
+                    speak(`Zaroor Sir, ${target} website par le chalta hoon.`);
+                    window.open(url, '_blank');
+                    return;
+                }
+            }
+
+            // GOOGLE SEARCH
+            if (cmd.includes('search') || cmd.includes('dhoondo') || cmd.includes('pata karo')) {
+                let query = cmd.replace('search for', '').replace('search', '').replace('dhoondo', '').replace('pata karo', '').trim();
+                if (query) {
+                    speak(`Theek hai Sir, ${query} ke baare mein dhoond raha hoon.`);
+                    window.open(`https://www.google.com/search?q=${query}`, '_blank');
+                    return;
+                }
+            }
+
+            // WIKIPEDIA
+            if (cmd.includes('who is') || cmd.includes('what is') || cmd.includes('kaun hai') || cmd.includes('kya hai')) {
+                let query = cmd.replace('who is', '').replace('what is', '').replace('kaun hai', '').replace('kya hai', '').trim();
+                if (query) {
+                    speak(`Ji Sir, ${query} ki information nikal raha hoon.`);
+                    fetchWikipedia(query);
+                    return;
+                }
+            }
+
+            // CHAT LOGIC (Hinglish)
+            if (cmd.includes('kaise ho') || cmd.includes('how are you')) {
+                speak("Main ekdam fit hoon Sir! Aapka din kaisa ja raha hai?");
+            } else if (cmd.includes('hello') || cmd.includes('hi')) {
+                speak("Hello Sir, command dijiye, main taiyar hoon.");
+            } else if (cmd.includes('khana') || cmd.includes('dinner') || cmd.includes('lunch')) {
+                speak("Main AI hoon Sir, mujhe bhook nahi lagti, par aap apna khayal rakhiye!");
+            } else if (cmd.includes('shukriya') || cmd.includes('thanks') || cmd.includes('thank you')) {
+                speak("Aapka swagat hai Sir. Mere liye koi aur seva?");
+            } else if (cmd.includes('naam') || cmd.includes('name')) {
+                speak("Mera naam JARVIS hai, aapka personal assistant.");
+            } else if (cmd.includes('bye') || cmd.includes('tata') || cmd.includes('so jao')) {
+                speak("Alvida Sir, main standby mode par ja raha hoon.");
+            } else {
+                // If nothing matches, try a smart search
+                speak(`Sir, mujhe iska exact command nahi mila, par main ise search kar sakta hoon. Kya search karun?`);
+            }
+        }
+
+        async function fetchWikipedia(query) {
+            const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.extract) {
+                    speak(data.extract.split('.')[0] + "."); // Speak first sentence
+                    addLog(`WIKI: ${data.extract}`);
+                } else {
+                    speak("I couldn't find any specific records on that topic in the main database.");
+                }
+            } catch (error) {
+                speak("There was a connection error to the knowledge base.");
+            }
+        }
+
+        // Initial Greeting
+        window.onload = () => {
+            setTimeout(() => {
+                speak("System online. JARVIS is at your service.");
+            }, 1000);
+        };
+    </script>
+</body>
+
+</html>
